@@ -9,35 +9,57 @@ import com.andrelake.desafiopicpaybackend.repositories.TransactionRepository;
 import com.andrelake.desafiopicpaybackend.services.dtos.TransactionDTO;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.naming.ServiceUnavailableException;
 import java.math.BigDecimal;
 
 @Service
 public class TransactionService {
 
-    @Autowired
-    private TransactionRepository transactionRepository;
-    @Autowired
-    private UserService userService;
+    private final TransactionRepository transactionRepository;
+    private final UserService userService;
+    private final AuthorizationService authorizationService;
+    private final NotificationService notificationService;
+
+    public TransactionService(TransactionRepository transactionRepository,
+                              UserService userService,
+                              AuthorizationService authorizationService,
+                              NotificationService notificationService) {
+        this.transactionRepository = transactionRepository;
+        this.userService = userService;
+        this.authorizationService = authorizationService;
+        this.notificationService = notificationService;
+    }
+
 
     @Transactional
-    public TransactionDTO makeATransaction(@Valid TransactionDTO transaction) {
+    public TransactionDTO makeATransaction(@Valid TransactionDTO transaction) throws ServiceUnavailableException {
         Transaction savedTransaction;
         User payer = userService.findById(transaction.getPayerId());
+
+        authorize(payer);
+
         User payee = userService.findById(transaction.getPayeeId());
 
-        if(isASelfDeposit(payer, payee)) {
+        if (isASelfDeposit(payer, payee)) {
             payer.setBalance(payer.getBalance().add(transaction.getAmount()));
             userService.save(payer);
             savedTransaction = transactionRepository.save(new Transaction(payer, transaction.getAmount(), payee));
+            this.notificationService.sendNotification(payer, "Deposit completed successfully");
+            this.notificationService.sendNotification(payee, "Deposit received");
         } else {
             validateTransaction(payer, transaction);
             savedTransaction = transactionHandler(payer, payee, transaction.getAmount());
+            this.notificationService.sendNotification(payer, "Transaction completed successfully");
+            this.notificationService.sendNotification(payee, "Transaction received");
         }
 
         return new TransactionDTO(savedTransaction);
+    }
+
+    private void authorize(User payer) throws ServiceUnavailableException {
+        this.authorizationService.authorize(payer);
     }
 
     private boolean isASelfDeposit(User payer, User payee) {

@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.naming.ServiceUnavailableException;
+
 @RestController
 @RequestMapping("/transactions")
 public class TransactionController {
@@ -22,7 +24,7 @@ public class TransactionController {
 
 
     @PostMapping("/create")
-    public ResponseEntity<TransactionResponseDTO> createTransaction(@RequestBody @Valid TransactionRequestDTO requestDTO) {
+    public ResponseEntity<TransactionResponseDTO> createTransaction(@RequestBody @Valid TransactionRequestDTO requestDTO) throws ServiceUnavailableException {
         TransactionDTO saved = transactionService.makeATransaction(new TransactionDTO(requestDTO));
         return new ResponseEntity<>(new TransactionResponseDTO(saved), HttpStatus.CREATED);
     }

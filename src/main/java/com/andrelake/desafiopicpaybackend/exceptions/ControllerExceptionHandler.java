@@ -32,4 +32,9 @@ public class ControllerExceptionHandler {
     public ResponseEntity<ExceptionDTO> threatBusinessException(InsufficientBalanceException e) {
         return ResponseEntity.badRequest().body(new ExceptionDTO(e.getMessage(), HttpStatus.BAD_REQUEST.value()));
     }
+
+    @ExceptionHandler(UserNotAuthorizedException.class)
+    public ResponseEntity<ExceptionDTO> threatUserNotAuthorizedException(UserNotAuthorizedException e) {
+        return ResponseEntity.badRequest().body(new ExceptionDTO(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));
+    }
 }
