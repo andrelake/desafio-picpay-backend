@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.net.SocketException;
+
 @RestControllerAdvice
 public class ControllerExceptionHandler {
 
@@ -36,5 +38,11 @@ public class ControllerExceptionHandler {
     @ExceptionHandler(UserNotAuthorizedException.class)
     public ResponseEntity<ExceptionDTO> threatUserNotAuthorizedException(UserNotAuthorizedException e) {
         return ResponseEntity.badRequest().body(new ExceptionDTO(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));
+    }
+
+    @ExceptionHandler(SocketException.class)
+    public ResponseEntity<ExceptionDTO> threatSocketException(SocketException e) {
+        HttpStatus status = HttpStatus.SERVICE_UNAVAILABLE;
+        return new ResponseEntity<>(new ExceptionDTO("Service unavailable: " + e.getMessage(), status.value()), status);
     }
 }

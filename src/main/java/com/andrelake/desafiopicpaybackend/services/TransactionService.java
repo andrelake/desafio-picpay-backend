@@ -6,6 +6,8 @@ import com.andrelake.desafiopicpaybackend.domain.enums.UserType;
 import com.andrelake.desafiopicpaybackend.exceptions.BusinessException;
 import com.andrelake.desafiopicpaybackend.exceptions.InsufficientBalanceException;
 import com.andrelake.desafiopicpaybackend.repositories.TransactionRepository;
+import com.andrelake.desafiopicpaybackend.services.aws.AwsSnsService;
+import com.andrelake.desafiopicpaybackend.services.aws.dto.MessageDTO;
 import com.andrelake.desafiopicpaybackend.services.dtos.TransactionDTO;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -21,15 +23,18 @@ public class TransactionService {
     private final UserService userService;
     private final AuthorizationService authorizationService;
     private final NotificationService notificationService;
+    private final AwsSnsService awsSnsService;
 
     public TransactionService(TransactionRepository transactionRepository,
                               UserService userService,
                               AuthorizationService authorizationService,
-                              NotificationService notificationService) {
+                              NotificationService notificationService,
+                              AwsSnsService awsSnsService) {
         this.transactionRepository = transactionRepository;
         this.userService = userService;
         this.authorizationService = authorizationService;
         this.notificationService = notificationService;
+        this.awsSnsService = awsSnsService;
     }
 
 
@@ -46,14 +51,17 @@ public class TransactionService {
             payer.setBalance(payer.getBalance().add(transaction.getAmount()));
             userService.save(payer);
             savedTransaction = transactionRepository.save(new Transaction(payer, transaction.getAmount(), payee));
-            this.notificationService.sendNotification(payer, "Deposit completed successfully");
-            this.notificationService.sendNotification(payee, "Deposit received");
         } else {
             validateTransaction(payer, transaction);
             savedTransaction = transactionHandler(payer, payee, transaction.getAmount());
-            this.notificationService.sendNotification(payer, "Transaction completed successfully");
-            this.notificationService.sendNotification(payee, "Transaction received");
         }
+
+        this.notificationService.sendNotification(payer);
+        this.notificationService.sendNotification(payee);
+
+        this.awsSnsService.publish(
+                new MessageDTO(payer.getFirstName() + " made a transaction of " + transaction.getAmount() +
+                        " to " + payee.getFirstName()));
 
         return new TransactionDTO(savedTransaction);
     }

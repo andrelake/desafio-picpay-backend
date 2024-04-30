@@ -1,7 +1,7 @@
 package com.andrelake.desafiopicpaybackend.services;
 
 import com.andrelake.desafiopicpaybackend.domain.User;
-import com.andrelake.desafiopicpaybackend.services.dtos.NotificationDTO;
+import com.andrelake.desafiopicpaybackend.services.dtos.NotificationResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -23,10 +23,9 @@ public class NotificationService {
         this.restTemplate = restTemplate;
     }
 
-    public void sendNotification(User user, String message) throws ServiceUnavailableException {
+    public void sendNotification(User user) throws ServiceUnavailableException {
         log.info("Sending notification to {}.", user.getFirstName());
-        NotificationDTO notification = new NotificationDTO(user, message);
-        ResponseEntity<String> resp = restTemplate.postForEntity(NOTIFICATION_URL, notification, String.class);
+        ResponseEntity<NotificationResponseDTO> resp = restTemplate.getForEntity(NOTIFICATION_URL, NotificationResponseDTO.class);
 
         if (!resp.getStatusCode().is2xxSuccessful()) {
             log.info("Error - Notification Service is unavailable.");
