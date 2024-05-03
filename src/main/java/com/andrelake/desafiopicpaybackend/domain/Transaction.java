@@ -1,16 +1,28 @@
 package com.andrelake.desafiopicpaybackend.domain;
 
-import com.andrelake.desafiopicpaybackend.services.dtos.TransactionDTO;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.json.JSONObject;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity(name = "transactions")
 @Table(name = "transactions")
-@Getter @Setter
-@AllArgsConstructor @NoArgsConstructor
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @EqualsAndHashCode(of = "id")
 public class Transaction {
 
@@ -30,10 +42,21 @@ public class Transaction {
     @JoinColumn(name = "payee_id")
     private User payee;
 
-    public Transaction(User payer, BigDecimal amount,  User payee) {
+    public Transaction(User payer, BigDecimal amount, User payee) {
         this.payer = payer;
         this.amount = amount;
         this.payee = payee;
         this.date = LocalDateTime.now();
+    }
+
+    @Override
+    public String toString() {
+        JSONObject json = new JSONObject();
+        json.put("id", id);
+        json.put("amount", amount);
+        json.put("date", date);
+        json.put("payer", payer.getId());
+        json.put("payee", payee.getId());
+        return json.toString();
     }
 }

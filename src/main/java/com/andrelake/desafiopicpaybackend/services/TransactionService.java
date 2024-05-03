@@ -59,9 +59,7 @@ public class TransactionService {
         this.notificationService.sendNotification(payer);
         this.notificationService.sendNotification(payee);
 
-        this.awsSnsService.publish(
-                new MessageDTO(payer.getFirstName() + " made a transaction of " + transaction.getAmount() +
-                        " to " + payee.getFirstName()));
+        this.awsSnsService.publish(new MessageDTO(savedTransaction.toString()));
 
         return new TransactionDTO(savedTransaction);
     }
