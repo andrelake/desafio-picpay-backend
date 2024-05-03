@@ -1,7 +1,7 @@
 # Desafio Back-end PicPay
 
 ## Technologies
-### Java 17, Spring, MySQL, AWS SQS, AWS SNS
+### Java 17, Spring, MySQL, AWS SQS, AWS Lambda, AWS SNS
 
 ## To run:
 ### 1- add a file named as "secrets.properties" with the following parameters:
